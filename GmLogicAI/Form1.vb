@@ -1,58 +1,72 @@
 ﻿Public Class Form1
 
-    Private net As MLP
-    Private epoch As Integer = 0
-    Private running As Boolean = False
+    Private neuralNetwork As MLP
+    Private currentEpoch As Integer = 0
+    Private trainingIndex As Integer = 0
 
-    Private X As Double(,) = {
+    ' ===== ΔΕΔΟΜΕΝΑ XOR =====
+    Private trainingInputs As Double(,) = {
         {0, 0},
         {0, 1},
         {1, 0},
         {1, 1}
     }
 
-    Private Y As Double() = {0, 1, 1, 0}
+    Private trainingTargets As Double() = {0, 1, 1, 0}
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        net = New MLP(2, 4, 1, 0.5)
-        UpdateUI(0)
+        neuralNetwork = New MLP(
+            inputCount:=2,
+            hiddenCount:=4,
+            outputCount:=1,
+            learningRateValue:=0.5)
+
+        lblEpoch.Text = "Epoch: 0"
+        lblLoss.Text = "Loss: 0"
+        txtOutput.Text = "Πάτα 'Train One' για ένα βήμα εκπαίδευσης"
     End Sub
 
-    Private Sub btnStart_Click(sender As Object, e As EventArgs) Handles btnStart.Click
-        running = True
-        Timer1.Start()
+    ' ===== ΚΟΥΜΠΙ: TRAIN ONE STEP =====
+    Private Sub btnStep_Click(sender As Object, e As EventArgs) Handles btnStep.Click
+
+        Dim inputA As Double = trainingInputs(trainingIndex, 0)
+        Dim inputB As Double = trainingInputs(trainingIndex, 1)
+        Dim targetValue As Double = trainingTargets(trainingIndex)
+
+        Dim lossValue As Double =
+            neuralNetwork.TrainOneStep(inputA, inputB, targetValue)
+
+        currentEpoch += 1
+        ShowTrainingDetails(inputA, inputB, targetValue, lossValue)
+
+        trainingIndex = (trainingIndex + 1) Mod trainingTargets.Length
     End Sub
 
-    Private Sub btnStop_Click(sender As Object, e As EventArgs) Handles btnStop.Click
-        running = False
-        Timer1.Stop()
-    End Sub
+    ' ===== ΑΠΕΙΚΟΝΙΣΗ ΤΙΜΩΝ =====
+    Private Sub ShowTrainingDetails(inputA As Double,
+                                    inputB As Double,
+                                    targetValue As Double,
+                                    lossValue As Double)
 
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        If Not running Then Return
-
-        Dim loss As Double = 0
-
-        For i As Integer = 1 To 50
-            epoch += 1
-            For j As Integer = 0 To 3
-                loss += net.TrainOne(X(j, 0), X(j, 1), Y(j))
-            Next
-        Next
-
-        UpdateUI(loss)
-    End Sub
-
-    Private Sub UpdateUI(loss As Double)
-        lblEpoch.Text = "Epoch: " & epoch
-        lblLoss.Text = "Loss: " & loss.ToString("0.000000")
+        lblEpoch.Text = "Epoch: " & currentEpoch
+        lblLoss.Text = "Loss: " & lossValue.ToString("0.000000")
 
         Dim sb As New System.Text.StringBuilder()
-        sb.AppendLine("XOR predictions:")
-        For i As Integer = 0 To 3
-            Dim p = net.Predict(X(i, 0), X(i, 1))
-            sb.AppendLine($"{X(i, 0)} XOR {X(i, 1)} -> {p:0.0000}")
+
+        sb.AppendLine("=== TRAIN ONE STEP ===")
+        sb.AppendLine($"Inputs: ({inputA}, {inputB})")
+        sb.AppendLine($"Target Value: {targetValue}")
+        sb.AppendLine()
+
+        sb.AppendLine("Hidden Layer Outputs:")
+        For i = 0 To neuralNetwork.HiddenNeuronCount - 1
+            sb.AppendLine($"  Hidden[{i}] = {neuralNetwork.LastHiddenOutputs(i):0.0000}")
         Next
+
+        sb.AppendLine()
+        sb.AppendLine($"Predicted Value: {neuralNetwork.LastPredictedValue:0.0000}")
+        sb.AppendLine($"Error: {(neuralNetwork.LastPredictedValue - targetValue):0.0000}")
+        sb.AppendLine($"Loss: {lossValue:0.000000}")
 
         txtOutput.Text = sb.ToString()
     End Sub

@@ -1,38 +1,57 @@
 ﻿Public Class MLP
 
-    Private inputSize As Integer
-    Private hiddenSize As Integer
-    Private outputSize As Integer
-    Private learningRate As Double
+    ' ===== ΔΟΜΗ ΔΙΚΤΥΟΥ =====
+    Private _inputNeuronCount As Integer
+    Private _hiddenNeuronCount As Integer
+    Private _outputNeuronCount As Integer
+    Private _learningRate As Double
 
-    Private W1(,) As Double
-    Private b1() As Double
+    ' ===== ΒΑΡΗ =====
+    Private _weightsInputHidden(,) As Double
+    Private _weightsHiddenOutput(,) As Double
 
-    Private W2(,) As Double
-    Private b2() As Double
+    ' ===== BIAS =====
+    Private _biasHidden() As Double
+    Private _biasOutput() As Double
 
     Private rnd As New Random()
 
-    Public Sub New(inputSize As Integer, hiddenSize As Integer, outputSize As Integer, lr As Double)
-        Me.inputSize = inputSize
-        Me.hiddenSize = hiddenSize
-        Me.outputSize = outputSize
-        Me.learningRate = lr
+    ' ===== ΤΕΛΕΥΤΑΙΕΣ ΤΙΜΕΣ (για visualization) =====
+    Public LastHiddenOutputs() As Double
+    Public LastPredictedValue As Double
 
-        ReDim W1(hiddenSize - 1, inputSize - 1)
-        ReDim b1(hiddenSize - 1)
+    ' ===== READ-ONLY PROPERTIES =====
+    Public ReadOnly Property HiddenNeuronCount As Integer
+        Get
+            Return _hiddenNeuronCount
+        End Get
+    End Property
 
-        ReDim W2(outputSize - 1, hiddenSize - 1)
-        ReDim b2(outputSize - 1)
+    ' ===== CONSTRUCTOR =====
+    Public Sub New(inputCount As Integer,
+                   hiddenCount As Integer,
+                   outputCount As Integer,
+                   learningRateValue As Double)
 
-        InitWeights(W1)
-        InitWeights(W2)
+        _inputNeuronCount = inputCount
+        _hiddenNeuronCount = hiddenCount
+        _outputNeuronCount = outputCount
+        _learningRate = learningRateValue
+
+        ReDim _weightsInputHidden(_hiddenNeuronCount - 1, _inputNeuronCount - 1)
+        ReDim _biasHidden(_hiddenNeuronCount - 1)
+
+        ReDim _weightsHiddenOutput(_outputNeuronCount - 1, _hiddenNeuronCount - 1)
+        ReDim _biasOutput(_outputNeuronCount - 1)
+
+        InitializeWeights(_weightsInputHidden)
+        InitializeWeights(_weightsHiddenOutput)
     End Sub
 
-    Private Sub InitWeights(ByRef W(,) As Double)
-        For i = 0 To W.GetLength(0) - 1
-            For j = 0 To W.GetLength(1) - 1
-                W(i, j) = rnd.NextDouble() * 2 - 1
+    Private Sub InitializeWeights(ByRef weights(,) As Double)
+        For i = 0 To weights.GetLength(0) - 1
+            For j = 0 To weights.GetLength(1) - 1
+                weights(i, j) = rnd.NextDouble() * 2 - 1
             Next
         Next
     End Sub
@@ -41,70 +60,64 @@
         Return 1.0 / (1.0 + Math.Exp(-x))
     End Function
 
-    Private Function SigmoidDeriv(y As Double) As Double
+    Private Function SigmoidDerivative(y As Double) As Double
         Return y * (1 - y)
     End Function
 
-    Public Function Predict(x1 As Double, x2 As Double) As Double
-        Dim x() As Double = {x1, x2}
-        Dim h(hiddenSize - 1) As Double
+    ' ===== ΕΝΑ ΒΗΜΑ ΕΚΠΑΙΔΕΥΣΗΣ =====
+    Public Function TrainOneStep(inputA As Double,
+                                 inputB As Double,
+                                 targetValue As Double) As Double
 
-        For i = 0 To hiddenSize - 1
-            Dim sum As Double = b1(i)
-            For j = 0 To inputSize - 1
-                sum += W1(i, j) * x(j)
+        Dim inputVector() As Double = {inputA, inputB}
+        Dim hiddenOutputs(_hiddenNeuronCount - 1) As Double
+
+        ' ---- FORWARD: Input → Hidden ----
+        For i = 0 To _hiddenNeuronCount - 1
+            Dim sum As Double = _biasHidden(i)
+            For j = 0 To _inputNeuronCount - 1
+                sum += _weightsInputHidden(i, j) * inputVector(j)
             Next
-            h(i) = Sigmoid(sum)
+            hiddenOutputs(i) = Sigmoid(sum)
         Next
 
-        Dim output As Double = b2(0)
-        For i = 0 To hiddenSize - 1
-            output += W2(0, i) * h(i)
+        ' ---- FORWARD: Hidden → Output ----
+        Dim outputSum As Double = _biasOutput(0)
+        For i = 0 To _hiddenNeuronCount - 1
+            outputSum += _weightsHiddenOutput(0, i) * hiddenOutputs(i)
         Next
 
-        Return Sigmoid(output)
-    End Function
+        Dim predictedValue As Double = Sigmoid(outputSum)
 
-    Public Function TrainOne(x1 As Double, x2 As Double, yTrue As Double) As Double
-        Dim x() As Double = {x1, x2}
-        Dim h(hiddenSize - 1) As Double
+        ' ---- ΑΠΟΘΗΚΕΥΣΗ ΓΙΑ UI ----
+        LastHiddenOutputs = CType(hiddenOutputs.Clone(), Double())
+        LastPredictedValue = predictedValue
 
-        ' Forward
-        For i = 0 To hiddenSize - 1
-            Dim sum As Double = b1(i)
-            For j = 0 To inputSize - 1
-                sum += W1(i, j) * x(j)
+        ' ---- LOSS ----
+        Dim errorValue As Double = predictedValue - targetValue
+        Dim lossValue As Double = 0.5 * errorValue * errorValue
+
+        ' ---- BACKPROP: OUTPUT ----
+        Dim deltaOutput As Double = errorValue * SigmoidDerivative(predictedValue)
+
+        For i = 0 To _hiddenNeuronCount - 1
+            _weightsHiddenOutput(0, i) -= _learningRate * deltaOutput * hiddenOutputs(i)
+        Next
+        _biasOutput(0) -= _learningRate * deltaOutput
+
+        ' ---- BACKPROP: HIDDEN ----
+        For i = 0 To _hiddenNeuronCount - 1
+            Dim deltaHidden As Double =
+                _weightsHiddenOutput(0, i) * deltaOutput * SigmoidDerivative(hiddenOutputs(i))
+
+            For j = 0 To _inputNeuronCount - 1
+                _weightsInputHidden(i, j) -= _learningRate * deltaHidden * inputVector(j)
             Next
-            h(i) = Sigmoid(sum)
+
+            _biasHidden(i) -= _learningRate * deltaHidden
         Next
 
-        Dim outputSum As Double = b2(0)
-        For i = 0 To hiddenSize - 1
-            outputSum += W2(0, i) * h(i)
-        Next
-
-        Dim yPred As Double = Sigmoid(outputSum)
-        Dim errorVal As Double = yPred - yTrue
-        Dim loss As Double = 0.5 * errorVal * errorVal
-
-        ' Backprop output
-        Dim dOut As Double = errorVal * SigmoidDeriv(yPred)
-
-        For i = 0 To hiddenSize - 1
-            W2(0, i) -= learningRate * dOut * h(i)
-        Next
-        b2(0) -= learningRate * dOut
-
-        ' Backprop hidden
-        For i = 0 To hiddenSize - 1
-            Dim dHidden As Double = W2(0, i) * dOut * SigmoidDeriv(h(i))
-            For j = 0 To inputSize - 1
-                W1(i, j) -= learningRate * dHidden * x(j)
-            Next
-            b1(i) -= learningRate * dHidden
-        Next
-
-        Return loss
+        Return lossValue
     End Function
 
 End Class
