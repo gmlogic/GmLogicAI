@@ -24,7 +24,7 @@ Partial Class Form1
         Me.lblLoss = New System.Windows.Forms.Label()
         Me.txtOutput = New System.Windows.Forms.TextBox()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
-        Me.btnStep = New System.Windows.Forms.Button()
+        Me.btnTrain = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'btnStart
@@ -78,21 +78,21 @@ Partial Class Form1
         '
         Me.Timer1.Interval = 50
         '
-        'btnStep
+        'btnTrain
         '
-        Me.btnStep.Location = New System.Drawing.Point(195, 10)
-        Me.btnStep.Name = "btnStep"
-        Me.btnStep.Size = New System.Drawing.Size(86, 26)
-        Me.btnStep.TabIndex = 5
-        Me.btnStep.Text = "btnStep"
-        Me.btnStep.UseVisualStyleBackColor = True
+        Me.btnTrain.Location = New System.Drawing.Point(195, 10)
+        Me.btnTrain.Name = "btnTrain"
+        Me.btnTrain.Size = New System.Drawing.Size(86, 26)
+        Me.btnTrain.TabIndex = 5
+        Me.btnTrain.Text = "Train One"
+        Me.btnTrain.UseVisualStyleBackColor = True
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(415, 313)
-        Me.Controls.Add(Me.btnStep)
+        Me.Controls.Add(Me.btnTrain)
         Me.Controls.Add(Me.txtOutput)
         Me.Controls.Add(Me.lblLoss)
         Me.Controls.Add(Me.lblEpoch)
@@ -111,5 +111,5 @@ Partial Class Form1
     Friend WithEvents lblLoss As Label
     Friend WithEvents txtOutput As TextBox
     Friend WithEvents Timer1 As Timer
-    Friend WithEvents btnStep As Button
+    Friend WithEvents btnTrain As Button
 End Class
