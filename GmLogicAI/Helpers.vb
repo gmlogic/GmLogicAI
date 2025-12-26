@@ -166,6 +166,36 @@ Module Helpers
         Return result
     End Function
 
+    Public Function SampleWord(
+    output As List(Of Double),
+    vocab As List(Of String),
+    temperature As Double
+) As String
+
+        Dim expVals As New List(Of Double)
+        Dim sum As Double = 0
+
+        For Each v In output
+            Dim e = Math.Exp(v / temperature)
+            expVals.Add(e)
+            sum += e
+        Next
+
+        Randomize()
+        Dim r As Double = Rnd()
+        Dim cumulative As Double = 0
+
+        For i = 0 To expVals.Count - 1
+            cumulative += expVals(i) / sum
+            If r <= cumulative Then
+                Return vocab(i)
+            End If
+        Next
+
+        Return vocab(0)
+
+    End Function
+
 
 End Module
 
