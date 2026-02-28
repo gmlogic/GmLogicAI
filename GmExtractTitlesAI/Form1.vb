@@ -66,7 +66,8 @@ Public Class Form1
 
     Private Sub btnConvertToMonotonic_Click(sender As Object, e As EventArgs) Handles btnConvertToMonotonic.Click
         Dim raw = txtRawPolytonic.Text
-        Dim converted = ConvertPolytonicToMonotonic(raw)
+        Dim normalizedInput = NormalizeOcrArtifacts(raw)
+        Dim converted = ConvertPolytonicToMonotonic(normalizedInput)
         Dim cleaned = CleanTextForProcessing(converted)
         txtCleanMonotonic.Text = cleaned
     End Sub
@@ -177,6 +178,31 @@ Public Class Form1
         Catch
             Return False
         End Try
+    End Function
+
+
+    Private Function NormalizeOcrArtifacts(input As String) As String
+        If String.IsNullOrWhiteSpace(input) Then
+            Return String.Empty
+        End If
+
+        Dim normalized = input
+
+        ' Common OCR substitutions for Greek text.
+        normalized = normalized.Replace("µ", "μ")
+        normalized = normalized.Replace("᾿", "'")
+        normalized = normalized.Replace("῾", "'")
+        normalized = normalized.Replace("΄", "´")
+
+        ' Fix line-break hyphenation for wrapped words.
+        normalized = Regex.Replace(normalized,
+                                   "([\p{IsGreek}\p{IsGreekExtended}])-\r?\n([\p{IsGreek}\p{IsGreekExtended}])",
+                                   "$1$2")
+
+        ' Normalize whitespace noise from OCR.
+        normalized = Regex.Replace(normalized, "[ \t]+", " ")
+
+        Return normalized
     End Function
 
     Private Function ConvertPolytonicToMonotonic(input As String) As String
