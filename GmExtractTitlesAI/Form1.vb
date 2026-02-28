@@ -184,19 +184,87 @@ Public Class Form1
             Return String.Empty
         End If
 
-        Dim normalized = input.Normalize(NormalizationForm.FormD)
         Dim sb As New StringBuilder()
+        Dim normalized = input.Normalize(NormalizationForm.FormD)
+        Dim i As Integer = 0
 
-        For Each ch In normalized
-            Dim cat = CharUnicodeInfo.GetUnicodeCategory(ch)
-            If cat <> UnicodeCategory.NonSpacingMark Then
-                sb.Append(ch)
+        While i < normalized.Length
+            Dim ch = normalized(i)
+
+            If CharUnicodeInfo.GetUnicodeCategory(ch) = UnicodeCategory.NonSpacingMark Then
+                i += 1
+                Continue While
             End If
-        Next
 
-        Dim withoutMarks = sb.ToString().Normalize(NormalizationForm.FormC)
-        withoutMarks = withoutMarks.Replace("ς", "σ")
-        Return withoutMarks
+            Dim marks As New List(Of Char)()
+            Dim j = i + 1
+            While j < normalized.Length AndAlso CharUnicodeInfo.GetUnicodeCategory(normalized(j)) = UnicodeCategory.NonSpacingMark
+                marks.Add(normalized(j))
+                j += 1
+            End While
+
+            sb.Append(ConvertGreekClusterToMonotonic(ch, marks))
+            i = j
+        End While
+
+        Return sb.ToString().Normalize(NormalizationForm.FormC)
+    End Function
+
+    Private Function ConvertGreekClusterToMonotonic(baseChar As Char, marks As List(Of Char)) As String
+        Dim hasAccent = marks.Any(Function(m) IsAccentMark(m))
+        Dim hasDiaeresis = marks.Any(Function(m) m = ChrW(&H308))
+
+        Select Case baseChar
+            Case "α"c
+                Return If(hasAccent, "ά", "α")
+            Case "ε"c
+                Return If(hasAccent, "έ", "ε")
+            Case "η"c
+                Return If(hasAccent, "ή", "η")
+            Case "ι"c
+                If hasDiaeresis AndAlso hasAccent Then Return "ΐ"
+                If hasDiaeresis Then Return "ϊ"
+                Return If(hasAccent, "ί", "ι")
+            Case "ο"c
+                Return If(hasAccent, "ό", "ο")
+            Case "υ"c
+                If hasDiaeresis AndAlso hasAccent Then Return "ΰ"
+                If hasDiaeresis Then Return "ϋ"
+                Return If(hasAccent, "ύ", "υ")
+            Case "ω"c
+                Return If(hasAccent, "ώ", "ω")
+            Case "Α"c
+                Return If(hasAccent, "Ά", "Α")
+            Case "Ε"c
+                Return If(hasAccent, "Έ", "Ε")
+            Case "Η"c
+                Return If(hasAccent, "Ή", "Η")
+            Case "Ι"c
+                If hasDiaeresis Then Return "Ϊ"
+                Return If(hasAccent, "Ί", "Ι")
+            Case "Ο"c
+                Return If(hasAccent, "Ό", "Ο")
+            Case "Υ"c
+                If hasDiaeresis Then Return "Ϋ"
+                Return If(hasAccent, "Ύ", "Υ")
+            Case "Ω"c
+                Return If(hasAccent, "Ώ", "Ω")
+            Case Else
+                Return baseChar
+        End Select
+    End Function
+
+    Private Function IsAccentMark(mark As Char) As Boolean
+        Select Case AscW(mark)
+            Case &H300, ' grave
+                 &H301, ' acute
+                 &H342, ' perispomeni
+                 &H340, ' varia
+                 &H341  ' oxia
+                Return True
+            Case Else
+                Return False
+        End Select
     End Function
 
     Private Function CleanTextForProcessing(input As String) As String
