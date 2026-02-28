@@ -8,6 +8,8 @@ Imports System.Text.RegularExpressions
 
 Public Class Form1
     Private ReadOnly imageFiles As New List(Of String)()
+    Private tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
+
 
     Private Sub btnLoadTiff_Click(sender As Object, e As EventArgs) Handles btnLoadTiff.Click
         Dim selected As New List(Of String)()
@@ -108,7 +110,7 @@ Public Class Form1
         Try
             Dim psi As New ProcessStartInfo()
             psi.FileName = "tesseract"
-            psi.Arguments = $"""{filePath}"" ""{tempOutputBase}"" -l ell"
+            psi.Arguments = $"""{filePath}"" ""{tempOutputBase}"" -l ell --tessdata-dir ""{tessPath}"""
             psi.CreateNoWindow = True
             psi.UseShellExecute = False
             psi.RedirectStandardError = True
