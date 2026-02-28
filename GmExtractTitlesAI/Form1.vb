@@ -8,8 +8,8 @@ Imports System.Text.RegularExpressions
 
 Public Class Form1
     Private ReadOnly imageFiles As New List(Of String)()
-    Private tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
-
+    Private ReadOnly tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
+    Private ReadOnly tesseractExePath As String = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 
     Private Sub btnLoadTiff_Click(sender As Object, e As EventArgs) Handles btnLoadTiff.Click
         Dim selected As New List(Of String)()
@@ -101,7 +101,7 @@ Public Class Form1
 
     Private Function RunTesseractOcr(filePath As String) As String
         If Not IsTesseractAvailable() Then
-            Return "[tesseract executable not found. Install Tesseract OCR and add it to PATH. Try language: ell.]"
+            Return $"[tesseract executable not found at PATH or default location: {tesseractExePath}]"
         End If
 
         Dim tempOutputBase = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))
@@ -109,7 +109,7 @@ Public Class Form1
 
         Try
             Dim psi As New ProcessStartInfo()
-            psi.FileName = "tesseract"
+            psi.FileName = GetTesseractCommand()
             psi.Arguments = $"""{filePath}"" ""{tempOutputBase}"" -l ell --tessdata-dir ""{tessPath}"""
             psi.CreateNoWindow = True
             psi.UseShellExecute = False
@@ -147,10 +147,19 @@ Public Class Form1
         End Try
     End Function
 
+
+    Private Function GetTesseractCommand() As String
+        If File.Exists(tesseractExePath) Then
+            Return tesseractExePath
+        End If
+
+        Return "tesseract"
+    End Function
+
     Private Function IsTesseractAvailable() As Boolean
         Try
             Dim psi As New ProcessStartInfo()
-            psi.FileName = "tesseract"
+            psi.FileName = GetTesseractCommand()
             psi.Arguments = "--version"
             psi.CreateNoWindow = True
             psi.UseShellExecute = False
