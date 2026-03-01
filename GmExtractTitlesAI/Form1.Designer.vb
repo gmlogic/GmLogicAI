@@ -47,7 +47,7 @@ Partial Class Form1
         'btnLoadTiff
         '
         Me.btnLoadTiff.Location = New System.Drawing.Point(2, 2)
-        Me.btnLoadTiff.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnLoadTiff.Margin = New System.Windows.Forms.Padding(2)
         Me.btnLoadTiff.Name = "btnLoadTiff"
         Me.btnLoadTiff.Size = New System.Drawing.Size(116, 24)
         Me.btnLoadTiff.TabIndex = 0
@@ -68,7 +68,7 @@ Partial Class Form1
         '
         Me.lstSelectedFiles.Dock = System.Windows.Forms.DockStyle.Fill
         Me.lstSelectedFiles.Location = New System.Drawing.Point(0, 0)
-        Me.lstSelectedFiles.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.lstSelectedFiles.Margin = New System.Windows.Forms.Padding(2)
         Me.lstSelectedFiles.Multiline = True
         Me.lstSelectedFiles.Name = "lstSelectedFiles"
         Me.lstSelectedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
@@ -77,8 +77,8 @@ Partial Class Form1
         '
         'btnOcrPages
         '
-        Me.btnOcrPages.Location = New System.Drawing.Point(2, 2)
-        Me.btnOcrPages.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnOcrPages.Location = New System.Drawing.Point(3, 3)
+        Me.btnOcrPages.Margin = New System.Windows.Forms.Padding(2)
         Me.btnOcrPages.Name = "btnOcrPages"
         Me.btnOcrPages.Size = New System.Drawing.Size(89, 24)
         Me.btnOcrPages.TabIndex = 3
@@ -88,7 +88,7 @@ Partial Class Form1
         'btnRemoveSelectedFile
         '
         Me.btnRemoveSelectedFile.Location = New System.Drawing.Point(122, 2)
-        Me.btnRemoveSelectedFile.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnRemoveSelectedFile.Margin = New System.Windows.Forms.Padding(2)
         Me.btnRemoveSelectedFile.Name = "btnRemoveSelectedFile"
         Me.btnRemoveSelectedFile.Size = New System.Drawing.Size(137, 24)
         Me.btnRemoveSelectedFile.TabIndex = 7
@@ -97,8 +97,8 @@ Partial Class Form1
         '
         'btnConvertToMonotonic
         '
-        Me.btnConvertToMonotonic.Location = New System.Drawing.Point(95, 2)
-        Me.btnConvertToMonotonic.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnConvertToMonotonic.Location = New System.Drawing.Point(318, 3)
+        Me.btnConvertToMonotonic.Margin = New System.Windows.Forms.Padding(2)
         Me.btnConvertToMonotonic.Name = "btnConvertToMonotonic"
         Me.btnConvertToMonotonic.Size = New System.Drawing.Size(89, 24)
         Me.btnConvertToMonotonic.TabIndex = 4
@@ -107,8 +107,8 @@ Partial Class Form1
         '
         'btnExtractTitles
         '
-        Me.btnExtractTitles.Location = New System.Drawing.Point(188, 2)
-        Me.btnExtractTitles.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.btnExtractTitles.Location = New System.Drawing.Point(633, 3)
+        Me.btnExtractTitles.Margin = New System.Windows.Forms.Padding(2)
         Me.btnExtractTitles.Name = "btnExtractTitles"
         Me.btnExtractTitles.Size = New System.Drawing.Size(72, 24)
         Me.btnExtractTitles.TabIndex = 5
@@ -118,10 +118,11 @@ Partial Class Form1
         'lblRawText
         '
         Me.lblRawText.AutoSize = True
-        Me.lblRawText.Location = New System.Drawing.Point(632, 21)
+        Me.lblRawText.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblRawText.Location = New System.Drawing.Point(3, 32)
         Me.lblRawText.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblRawText.Name = "lblRawText"
-        Me.lblRawText.Size = New System.Drawing.Size(101, 13)
+        Me.lblRawText.Size = New System.Drawing.Size(310, 30)
         Me.lblRawText.TabIndex = 0
         Me.lblRawText.Text = "OCR text (polytonic)"
         Me.lblRawText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
@@ -129,10 +130,11 @@ Partial Class Form1
         'lblCleanText
         '
         Me.lblCleanText.AutoSize = True
-        Me.lblCleanText.Location = New System.Drawing.Point(369, 65)
+        Me.lblCleanText.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblCleanText.Location = New System.Drawing.Point(318, 32)
         Me.lblCleanText.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblCleanText.Name = "lblCleanText"
-        Me.lblCleanText.Size = New System.Drawing.Size(107, 13)
+        Me.lblCleanText.Size = New System.Drawing.Size(310, 30)
         Me.lblCleanText.TabIndex = 1
         Me.lblCleanText.Text = "Monotonic + cleaned"
         Me.lblCleanText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
@@ -140,42 +142,46 @@ Partial Class Form1
         'lblTitles
         '
         Me.lblTitles.AutoSize = True
-        Me.lblTitles.Location = New System.Drawing.Point(799, 38)
+        Me.lblTitles.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.lblTitles.Location = New System.Drawing.Point(633, 32)
         Me.lblTitles.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.lblTitles.Name = "lblTitles"
-        Me.lblTitles.Size = New System.Drawing.Size(127, 13)
+        Me.lblTitles.Size = New System.Drawing.Size(311, 30)
         Me.lblTitles.TabIndex = 2
         Me.lblTitles.Text = "Extracted paragraph titles"
         Me.lblTitles.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'txtRawPolytonic
         '
-        Me.txtRawPolytonic.Location = New System.Drawing.Point(188, 52)
-        Me.txtRawPolytonic.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txtRawPolytonic.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtRawPolytonic.Location = New System.Drawing.Point(3, 65)
+        Me.txtRawPolytonic.Margin = New System.Windows.Forms.Padding(2)
         Me.txtRawPolytonic.Multiline = True
         Me.txtRawPolytonic.Name = "txtRawPolytonic"
         Me.txtRawPolytonic.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.txtRawPolytonic.Size = New System.Drawing.Size(72, 46)
+        Me.txtRawPolytonic.Size = New System.Drawing.Size(310, 284)
         Me.txtRawPolytonic.TabIndex = 3
         '
         'txtCleanMonotonic
         '
-        Me.txtCleanMonotonic.Location = New System.Drawing.Point(2, 52)
-        Me.txtCleanMonotonic.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txtCleanMonotonic.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtCleanMonotonic.Location = New System.Drawing.Point(318, 65)
+        Me.txtCleanMonotonic.Margin = New System.Windows.Forms.Padding(2)
         Me.txtCleanMonotonic.Multiline = True
         Me.txtCleanMonotonic.Name = "txtCleanMonotonic"
         Me.txtCleanMonotonic.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.txtCleanMonotonic.Size = New System.Drawing.Size(89, 46)
+        Me.txtCleanMonotonic.Size = New System.Drawing.Size(310, 284)
         Me.txtCleanMonotonic.TabIndex = 4
         '
         'txtExtractedTitles
         '
-        Me.txtExtractedTitles.Location = New System.Drawing.Point(95, 52)
-        Me.txtExtractedTitles.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.txtExtractedTitles.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.txtExtractedTitles.Location = New System.Drawing.Point(633, 65)
+        Me.txtExtractedTitles.Margin = New System.Windows.Forms.Padding(2)
         Me.txtExtractedTitles.Multiline = True
         Me.txtExtractedTitles.Name = "txtExtractedTitles"
         Me.txtExtractedTitles.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.txtExtractedTitles.Size = New System.Drawing.Size(89, 46)
+        Me.txtExtractedTitles.Size = New System.Drawing.Size(311, 284)
         Me.txtExtractedTitles.TabIndex = 5
         '
         'SplitContainer1
@@ -192,9 +198,6 @@ Partial Class Form1
         'SplitContainer1.Panel2
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.TableLayoutPanel1)
-        Me.SplitContainer1.Panel2.Controls.Add(Me.lblCleanText)
-        Me.SplitContainer1.Panel2.Controls.Add(Me.lblRawText)
-        Me.SplitContainer1.Panel2.Controls.Add(Me.lblTitles)
         Me.SplitContainer1.Size = New System.Drawing.Size(947, 544)
         Me.SplitContainer1.SplitterDistance = 188
         Me.SplitContainer1.TabIndex = 8
@@ -221,22 +224,28 @@ Partial Class Form1
         '
         'TableLayoutPanel1
         '
+        Me.TableLayoutPanel1.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.[Single]
         Me.TableLayoutPanel1.ColumnCount = 3
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 75.0!))
-        Me.TableLayoutPanel1.Controls.Add(Me.txtRawPolytonic, 2, 1)
-        Me.TableLayoutPanel1.Controls.Add(Me.txtCleanMonotonic, 0, 1)
-        Me.TableLayoutPanel1.Controls.Add(Me.txtExtractedTitles, 1, 1)
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334!))
+        Me.TableLayoutPanel1.Controls.Add(Me.txtExtractedTitles, 2, 2)
+        Me.TableLayoutPanel1.Controls.Add(Me.lblTitles, 2, 1)
+        Me.TableLayoutPanel1.Controls.Add(Me.lblCleanText, 1, 1)
+        Me.TableLayoutPanel1.Controls.Add(Me.txtCleanMonotonic, 1, 2)
+        Me.TableLayoutPanel1.Controls.Add(Me.lblRawText, 0, 1)
         Me.TableLayoutPanel1.Controls.Add(Me.btnExtractTitles, 2, 0)
+        Me.TableLayoutPanel1.Controls.Add(Me.txtRawPolytonic, 0, 2)
         Me.TableLayoutPanel1.Controls.Add(Me.btnConvertToMonotonic, 1, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.btnOcrPages, 0, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(12, 3)
+        Me.TableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(0, 0)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
-        Me.TableLayoutPanel1.RowCount = 2
-        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.Size = New System.Drawing.Size(262, 100)
+        Me.TableLayoutPanel1.RowCount = 3
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30.0!))
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(947, 352)
         Me.TableLayoutPanel1.TabIndex = 6
         '
         'Form1
@@ -245,13 +254,12 @@ Partial Class Form1
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(947, 544)
         Me.Controls.Add(Me.SplitContainer1)
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.MinimumSize = New System.Drawing.Size(814, 454)
         Me.Name = "Form1"
         Me.Text = "GmExtractTitlesAI"
         Me.SplitContainer1.Panel1.ResumeLayout(False)
         Me.SplitContainer1.Panel2.ResumeLayout(False)
-        Me.SplitContainer1.Panel2.PerformLayout()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.ResumeLayout(False)
         Me.SplitContainer2.Panel1.ResumeLayout(False)
