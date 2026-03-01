@@ -368,7 +368,24 @@ Public Class Form1
         Dim compact = line.Trim()
 
         ' Consider punctuation/digits-only OCR artifacts as separators.
-        Return Regex.IsMatch(compact, "^[\p{P}\p{S}\p{N}\s]+$")
+        If Regex.IsMatch(compact, "^[\p{P}\p{S}\p{N}\s]+$") Then
+            Return True
+        End If
+
+        ' Tiny OCR fragments (e.g., Ί, Φ5, Όι) should behave like separators.
+        Dim letters = Regex.Matches(compact, "[\p{L}]").Count
+        Dim lowers = Regex.Matches(compact, "[\p{Ll}]").Count
+        Dim symbols = Regex.Matches(compact, "[\p{P}\p{S}\p{N}]").Count
+
+        If compact.Length <= 6 AndAlso letters <= 3 AndAlso lowers <= 1 Then
+            Return True
+        End If
+
+        If letters > 0 AndAlso letters <= 3 AndAlso symbols >= letters Then
+            Return True
+        End If
+
+        Return False
     End Function
 
     Private Function ContainsGreekLetter(text As String) As Boolean
@@ -390,7 +407,7 @@ Public Class Form1
         End If
 
         Dim words = Regex.Split(text.Trim(), "\s+").Where(Function(w) w.Length > 0).ToList()
-        If words.Count < 2 OrElse words.Count > 12 Then
+        If words.Count < 1 OrElse words.Count > 12 Then
             Return False
         End If
 
@@ -402,7 +419,11 @@ Public Class Form1
             Return False
         End If
 
-        If Regex.IsMatch(text, "[,:;""'`-]\s*$") Then
+        If Regex.IsMatch(text, "[,;:]") Then
+            Return False
+        End If
+
+        If Regex.IsMatch(text, "[""'`]{2,}") Then
             Return False
         End If
 
