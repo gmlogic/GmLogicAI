@@ -385,6 +385,18 @@ Public Class Form1
             Return True
         End If
 
+        ' OCR junk lines often consist of many one-char tokens and punctuation
+        ' (e.g. «ΣΣ ’ λ ί μέ - -) and should split sections.
+        Dim tokens = Regex.Split(compact, "\s+").Where(Function(t) t.Length > 0).ToList()
+        If tokens.Count > 0 Then
+            Dim shortTokenCount = tokens.Count(Function(t) t.Length <= 1)
+            Dim punctuationTokenCount = tokens.Count(Function(t) Regex.IsMatch(t, "^[\p{P}\p{S}]+$"))
+
+            If shortTokenCount >= 3 AndAlso (shortTokenCount + punctuationTokenCount) >= Math.Max(3, tokens.Count - 1) Then
+                Return True
+            End If
+        End If
+
         Return False
     End Function
 
