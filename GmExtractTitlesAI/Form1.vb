@@ -389,8 +389,8 @@ Public Class Form1
         ' (e.g. «ΣΣ ’ λ ί μέ - -) and should split sections.
         Dim tokens = Regex.Split(compact, "\s+").Where(Function(t) t.Length > 0).ToList()
         If tokens.Count > 0 Then
-            Dim shortTokenCount = tokens.Count(Function(t) t.Length <= 1)
-            Dim punctuationTokenCount = tokens.Count(Function(t) Regex.IsMatch(t, "^[\p{P}\p{S}]+$"))
+            Dim shortTokenCount = tokens.Where(Function(t) t.Length <= 1).Count()
+            Dim punctuationTokenCount = tokens.Where(Function(t) Regex.IsMatch(t, "^[\p{P}\p{S}]+$")).Count()
 
             If shortTokenCount >= 3 AndAlso (shortTokenCount + punctuationTokenCount) >= Math.Max(3, tokens.Count - 1) Then
                 Return True
