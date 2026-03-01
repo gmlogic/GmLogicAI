@@ -406,6 +406,10 @@ Public Class Form1
             Return False
         End If
 
+        If StartsWithNarrativeConnector(text) Then
+            Return False
+        End If
+
         Dim words = Regex.Split(text.Trim(), "\s+").Where(Function(w) w.Length > 0).ToList()
         If words.Count < 1 OrElse words.Count > 12 Then
             Return False
@@ -428,6 +432,23 @@ Public Class Form1
         End If
 
         Return True
+    End Function
+
+
+    Private Function StartsWithNarrativeConnector(text As String) As Boolean
+        Dim compact = text.TrimStart()
+        Dim blockedStarts As String() = {
+            "Διότι ", "Διοτι ", "Όταν ", "Οταν ", "Αλλά ", "Αλλα ",
+            "Ώστε ", "Ωστε ", "Εάν ", "Εαν ", "Εις ", "Σύμφωνα ", "Συμφωνα "
+        }
+
+        For Each startWord In blockedStarts
+            If compact.StartsWith(startWord, StringComparison.OrdinalIgnoreCase) Then
+                Return True
+            End If
+        Next
+
+        Return False
     End Function
 
     Private Function IsBookHeaderLine(text As String) As Boolean
