@@ -10,6 +10,17 @@ Public Class Form1
     Private ReadOnly imageFiles As New List(Of String)()
     Private ReadOnly tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
     Private ReadOnly tesseractExePath As String = "C:\Program Files\Tesseract-OCR\tesseract.exe"
+    Private ocrProgressBar As ProgressBar
+    Private lblOcrProgress As Label
+    Private cmbPageSegMode As ComboBox
+    Private cmbEngineMode As ComboBox
+    Private chkPreserveSpaces As CheckBox
+    Private txtExtraOcrArgs As TextBox
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        InitializeOcrSettingsUi()
+        InitializeOcrProgressUi()
+    End Sub
 
     Private Sub btnLoadTiff_Click(sender As Object, e As EventArgs) Handles btnLoadTiff.Click
         Dim selected As New List(Of String)()
@@ -85,20 +96,29 @@ Public Class Form1
 
         Dim pagesText As New StringBuilder()
 
-        For i = 0 To imageFiles.Count - 1
-            Dim filePath = imageFiles(i)
-            Dim ocr = RunTesseractOcr(filePath)
+        ToggleOcrActionState(isRunning:=True)
 
-            If String.IsNullOrWhiteSpace(ocr) Then
-                ocr = $"[No OCR output for page {i + 1}]"
-            End If
+        Try
+            For i = 0 To imageFiles.Count - 1
+                Dim filePath = imageFiles(i)
+                Dim ocr = RunTesseractOcr(filePath)
 
-            pagesText.AppendLine($"===== PAGE {i + 1}: {Path.GetFileName(filePath)} =====")
-            pagesText.AppendLine(ocr.Trim())
-            pagesText.AppendLine()
-        Next
+                If String.IsNullOrWhiteSpace(ocr) Then
+                    ocr = $"[No OCR output for page {i + 1}]"
+                End If
 
-        txtRawPolytonic.Text = pagesText.ToString().Trim()
+                pagesText.AppendLine($"===== PAGE {i + 1}: {Path.GetFileName(filePath)} =====")
+                pagesText.AppendLine(ocr.Trim())
+                pagesText.AppendLine()
+
+                UpdateOcrProgress(currentIndex:=i + 1, totalPages:=imageFiles.Count)
+                Application.DoEvents()
+            Next
+
+            txtRawPolytonic.Text = pagesText.ToString().Trim()
+        Finally
+            ToggleOcrActionState(isRunning:=False)
+        End Try
     End Sub
 
     Private Sub btnConvertToMonotonic_Click(sender As Object, e As EventArgs) Handles btnConvertToMonotonic.Click
@@ -145,7 +165,7 @@ Public Class Form1
         Try
             Dim psi As New ProcessStartInfo()
             psi.FileName = GetTesseractCommand()
-            psi.Arguments = $"""{filePath}"" ""{tempOutputBase}"" -l ell --tessdata-dir ""{tessPath}"""
+            psi.Arguments = BuildTesseractArguments(filePath, tempOutputBase)
             psi.CreateNoWindow = True
             psi.UseShellExecute = False
             psi.RedirectStandardError = True
@@ -181,6 +201,153 @@ Public Class Form1
             End If
         End Try
     End Function
+
+    Private Function BuildTesseractArguments(filePath As String, tempOutputBase As String) As String
+        Dim psmValue = GetSelectedComboValue(cmbPageSegMode, fallbackValue:="6")
+        Dim oemValue = GetSelectedComboValue(cmbEngineMode, fallbackValue:="1")
+
+        Dim args As New List(Of String) From {
+            $"""{filePath}""",
+            $"""{tempOutputBase}""",
+            "-l ell",
+            $"--tessdata-dir ""{tessPath}""",
+            $"--psm {psmValue}",
+            $"--oem {oemValue}",
+            "--dpi 300"
+        }
+
+        If chkPreserveSpaces IsNot Nothing AndAlso chkPreserveSpaces.Checked Then
+            args.Add("-c preserve_interword_spaces=1")
+        End If
+
+        If txtExtraOcrArgs IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(txtExtraOcrArgs.Text) Then
+            args.Add(txtExtraOcrArgs.Text.Trim())
+        End If
+
+        Return String.Join(" ", args)
+    End Function
+
+    Private Function GetSelectedComboValue(combo As ComboBox, fallbackValue As String) As String
+        If combo Is Nothing OrElse combo.SelectedItem Is Nothing Then
+            Return fallbackValue
+        End If
+
+        Dim selected = combo.SelectedItem.ToString()
+        If String.IsNullOrWhiteSpace(selected) Then
+            Return fallbackValue
+        End If
+
+        Dim parts = selected.Split("-"c)
+        Return parts(0).Trim()
+    End Function
+
+    Private Sub InitializeOcrSettingsUi()
+        SplitContainer2.SplitterDistance = 62
+        Dim settingsY = 31
+
+        Dim lblPsm As New Label() With {
+            .AutoSize = True,
+            .Location = New Point(2, settingsY + 4),
+            .Text = "PSM"
+        }
+        SplitContainer2.Panel1.Controls.Add(lblPsm)
+
+        cmbPageSegMode = New ComboBox() With {
+            .DropDownStyle = ComboBoxStyle.DropDownList,
+            .Location = New Point(38, settingsY),
+            .Width = 145
+        }
+        cmbPageSegMode.Items.AddRange(New Object() {
+            "3 - Fully automatic",
+            "4 - Single column",
+            "6 - Single text block",
+            "11 - Sparse text"
+        })
+        cmbPageSegMode.SelectedItem = "6 - Single text block"
+        SplitContainer2.Panel1.Controls.Add(cmbPageSegMode)
+
+        Dim lblOem As New Label() With {
+            .AutoSize = True,
+            .Location = New Point(193, settingsY + 4),
+            .Text = "OEM"
+        }
+        SplitContainer2.Panel1.Controls.Add(lblOem)
+
+        cmbEngineMode = New ComboBox() With {
+            .DropDownStyle = ComboBoxStyle.DropDownList,
+            .Location = New Point(229, settingsY),
+            .Width = 125
+        }
+        cmbEngineMode.Items.AddRange(New Object() {
+            "1 - LSTM engine",
+            "3 - Default"
+        })
+        cmbEngineMode.SelectedItem = "1 - LSTM engine"
+        SplitContainer2.Panel1.Controls.Add(cmbEngineMode)
+
+        chkPreserveSpaces = New CheckBox() With {
+            .AutoSize = True,
+            .Location = New Point(364, settingsY + 3),
+            .Text = "Preserve spaces"
+        }
+        SplitContainer2.Panel1.Controls.Add(chkPreserveSpaces)
+
+        Dim lblExtraArgs As New Label() With {
+            .AutoSize = True,
+            .Location = New Point(488, settingsY + 4),
+            .Text = "Extra args"
+        }
+        SplitContainer2.Panel1.Controls.Add(lblExtraArgs)
+
+        txtExtraOcrArgs = New TextBox() With {
+            .Location = New Point(551, settingsY),
+            .Width = 390
+        }
+        SplitContainer2.Panel1.Controls.Add(txtExtraOcrArgs)
+    End Sub
+
+    Private Sub InitializeOcrProgressUi()
+        ocrProgressBar = New ProgressBar() With {
+            .Location = New Point(490, 6),
+            .Size = New Size(190, 17),
+            .Style = ProgressBarStyle.Continuous,
+            .Minimum = 0,
+            .Maximum = 100,
+            .Value = 0
+        }
+
+        lblOcrProgress = New Label() With {
+            .AutoSize = True,
+            .Location = New Point(688, 9),
+            .Text = "0/0"
+        }
+
+        SplitContainer2.Panel1.Controls.Add(ocrProgressBar)
+        SplitContainer2.Panel1.Controls.Add(lblOcrProgress)
+    End Sub
+
+    Private Sub UpdateOcrProgress(currentIndex As Integer, totalPages As Integer)
+        If ocrProgressBar Is Nothing OrElse lblOcrProgress Is Nothing Then
+            Return
+        End If
+
+        Dim safeTotal = Math.Max(totalPages, 1)
+        Dim percentage = CInt(Math.Truncate((currentIndex * 100.0R) / safeTotal))
+        ocrProgressBar.Value = Math.Max(0, Math.Min(100, percentage))
+        lblOcrProgress.Text = $"{currentIndex}/{totalPages}"
+    End Sub
+
+    Private Sub ToggleOcrActionState(isRunning As Boolean)
+        btnOcrPages.Enabled = Not isRunning
+        btnLoadTiff.Enabled = Not isRunning
+        btnRemoveSelectedFile.Enabled = Not isRunning
+
+        If isRunning Then
+            UpdateOcrProgress(0, imageFiles.Count)
+        ElseIf imageFiles.Count = 0 Then
+            UpdateOcrProgress(0, 0)
+        End If
+    End Sub
 
 
     Private Function GetTesseractCommand() As String
