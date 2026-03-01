@@ -21,6 +21,7 @@ Partial Class Form1
         Me.lblFiles = New System.Windows.Forms.Label()
         Me.lstSelectedFiles = New System.Windows.Forms.ListBox()
         Me.btnOcrPages = New System.Windows.Forms.Button()
+        Me.btnRemoveSelectedFile = New System.Windows.Forms.Button()
         Me.btnConvertToMonotonic = New System.Windows.Forms.Button()
         Me.btnExtractTitles = New System.Windows.Forms.Button()
         Me.tableMain = New System.Windows.Forms.TableLayoutPanel()
@@ -45,7 +46,7 @@ Partial Class Form1
         'lblFiles
         '
         Me.lblFiles.AutoSize = True
-        Me.lblFiles.Location = New System.Drawing.Point(176, 20)
+        Me.lblFiles.Location = New System.Drawing.Point(365, 20)
         Me.lblFiles.Name = "lblFiles"
         Me.lblFiles.Size = New System.Drawing.Size(87, 16)
         Me.lblFiles.TabIndex = 1
@@ -70,6 +71,15 @@ Partial Class Form1
         Me.btnOcrPages.TabIndex = 3
         Me.btnOcrPages.Text = "OCR all pages"
         Me.btnOcrPages.UseVisualStyleBackColor = True
+        '
+        'btnRemoveSelectedFile
+        '
+        Me.btnRemoveSelectedFile.Location = New System.Drawing.Point(173, 12)
+        Me.btnRemoveSelectedFile.Name = "btnRemoveSelectedFile"
+        Me.btnRemoveSelectedFile.Size = New System.Drawing.Size(183, 30)
+        Me.btnRemoveSelectedFile.TabIndex = 7
+        Me.btnRemoveSelectedFile.Text = "Remove selected file"
+        Me.btnRemoveSelectedFile.UseVisualStyleBackColor = True
         '
         'btnConvertToMonotonic
         '
@@ -182,6 +192,7 @@ Partial Class Form1
         Me.ClientSize = New System.Drawing.Size(1263, 669)
         Me.Controls.Add(Me.tableMain)
         Me.Controls.Add(Me.btnExtractTitles)
+        Me.Controls.Add(Me.btnRemoveSelectedFile)
         Me.Controls.Add(Me.btnConvertToMonotonic)
         Me.Controls.Add(Me.btnOcrPages)
         Me.Controls.Add(Me.lstSelectedFiles)
@@ -201,6 +212,7 @@ Partial Class Form1
     Friend WithEvents lblFiles As Label
     Friend WithEvents lstSelectedFiles As ListBox
     Friend WithEvents btnOcrPages As Button
+    Friend WithEvents btnRemoveSelectedFile As Button
     Friend WithEvents btnConvertToMonotonic As Button
     Friend WithEvents btnExtractTitles As Button
     Friend WithEvents tableMain As TableLayoutPanel

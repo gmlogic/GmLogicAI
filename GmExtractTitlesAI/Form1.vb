@@ -34,6 +34,27 @@ Public Class Form1
         RefreshSelectedFileList()
     End Sub
 
+    Private Sub btnRemoveSelectedFile_Click(sender As Object, e As EventArgs) Handles btnRemoveSelectedFile.Click
+        RemoveSelectedFile()
+    End Sub
+
+    Private Sub lstSelectedFiles_KeyDown(sender As Object, e As KeyEventArgs) Handles lstSelectedFiles.KeyDown
+        If e.KeyCode = Keys.Delete Then
+            RemoveSelectedFile()
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub RemoveSelectedFile()
+        If lstSelectedFiles.SelectedIndex < 0 Then
+            Return
+        End If
+
+        Dim selectedPath = lstSelectedFiles.SelectedItem.ToString()
+        imageFiles.RemoveAll(Function(path) String.Equals(path, selectedPath, StringComparison.OrdinalIgnoreCase))
+        RefreshSelectedFileList()
+    End Sub
+
     Private Sub btnOcrPages_Click(sender As Object, e As EventArgs) Handles btnOcrPages.Click
         If imageFiles.Count = 0 Then
             imageFiles.AddRange(GetDefaultImageFiles())
@@ -329,14 +350,11 @@ Public Class Form1
                 Continue For
             End If
 
-            If stripped.Length > 120 Then
+            If Not IsLikelyHeadingText(stripped) Then
                 Continue For
             End If
 
-            Dim first = stripped(0)
-            If Char.IsUpper(first) AndAlso ContainsGreekLetter(stripped) Then
-                titles.Add(stripped)
-            End If
+            titles.Add(stripped)
         Next
 
         Return titles.Distinct().ToList()
@@ -355,6 +373,55 @@ Public Class Form1
 
     Private Function ContainsGreekLetter(text As String) As Boolean
         Return Regex.IsMatch(text, "[\p{IsGreek}\p{IsGreekExtended}]")
+    End Function
+
+
+    Private Function IsLikelyHeadingText(text As String) As Boolean
+        If text.Length = 0 OrElse text.Length > 120 Then
+            Return False
+        End If
+
+        If Not ContainsGreekLetter(text) Then
+            Return False
+        End If
+
+        If IsBookHeaderLine(text) Then
+            Return False
+        End If
+
+        Dim words = Regex.Split(text.Trim(), "\s+").Where(Function(w) w.Length > 0).ToList()
+        If words.Count < 2 OrElse words.Count > 12 Then
+            Return False
+        End If
+
+        If Not Regex.IsMatch(text, "[\p{IsGreek}\p{IsGreekExtended}]") Then
+            Return False
+        End If
+
+        If Not Regex.IsMatch(text, "[\p{Ll}]") Then
+            Return False
+        End If
+
+        If Regex.IsMatch(text, "[,:;""'`-]\s*$") Then
+            Return False
+        End If
+
+        Return True
+    End Function
+
+    Private Function IsBookHeaderLine(text As String) As Boolean
+        Dim compact = text.Trim()
+        If compact.StartsWith("ΠΡΟΣ ", StringComparison.OrdinalIgnoreCase) Then
+            Return True
+        End If
+
+        ' OCR headers usually all-uppercase with chapter/verse markers.
+        If Regex.IsMatch(compact, "^[\p{Lu}\p{IsGreek}\p{IsGreekExtended}\s\.'΄’0-9-]+$") AndAlso
+           Not Regex.IsMatch(compact, "[\p{Ll}]") Then
+            Return True
+        End If
+
+        Return False
     End Function
 
 End Class
