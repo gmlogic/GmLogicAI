@@ -46,14 +46,30 @@ Public Class Form1
     End Sub
 
     Private Sub RemoveSelectedFile()
-        If lstSelectedFiles.SelectedIndex < 0 Then
+        Dim selectedPath = GetCurrentSelectedFilePath()
+        If String.IsNullOrWhiteSpace(selectedPath) Then
             Return
         End If
 
-        Dim selectedPath = lstSelectedFiles.SelectedItem.ToString()
         imageFiles.RemoveAll(Function(path) String.Equals(path, selectedPath, StringComparison.OrdinalIgnoreCase))
         RefreshSelectedFileList()
     End Sub
+
+    Private Function GetCurrentSelectedFilePath() As String
+        If String.IsNullOrWhiteSpace(lstSelectedFiles.Text) Then
+            Return String.Empty
+        End If
+
+        Dim caret = lstSelectedFiles.SelectionStart
+        Dim currentLineIndex = lstSelectedFiles.GetLineFromCharIndex(caret)
+        Dim lines = lstSelectedFiles.Lines
+
+        If currentLineIndex < 0 OrElse currentLineIndex >= lines.Length Then
+            Return String.Empty
+        End If
+
+        Return lines(currentLineIndex).Trim()
+    End Function
 
     Private Sub btnOcrPages_Click(sender As Object, e As EventArgs) Handles btnOcrPages.Click
         If imageFiles.Count = 0 Then
@@ -115,10 +131,7 @@ Public Class Form1
     End Function
 
     Private Sub RefreshSelectedFileList()
-        lstSelectedFiles.Items.Clear()
-        For Each filePath In imageFiles
-            lstSelectedFiles.Items.Add(filePath)
-        Next
+        lstSelectedFiles.Text = String.Join(Environment.NewLine, imageFiles)
     End Sub
 
     Private Function RunTesseractOcr(filePath As String) As String

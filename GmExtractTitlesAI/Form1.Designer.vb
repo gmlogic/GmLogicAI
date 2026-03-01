@@ -19,7 +19,7 @@ Partial Class Form1
     Private Sub InitializeComponent()
         Me.btnLoadTiff = New System.Windows.Forms.Button()
         Me.lblFiles = New System.Windows.Forms.Label()
-        Me.lstSelectedFiles = New System.Windows.Forms.ListBox()
+        Me.lstSelectedFiles = New System.Windows.Forms.TextBox()
         Me.btnOcrPages = New System.Windows.Forms.Button()
         Me.btnRemoveSelectedFile = New System.Windows.Forms.Button()
         Me.btnConvertToMonotonic = New System.Windows.Forms.Button()
@@ -56,10 +56,11 @@ Partial Class Form1
         '
         Me.lstSelectedFiles.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right)), System.Windows.Forms.AnchorStyles)
-        Me.lstSelectedFiles.FormattingEnabled = True
-        Me.lstSelectedFiles.ItemHeight = 16
         Me.lstSelectedFiles.Location = New System.Drawing.Point(12, 48)
+        Me.lstSelectedFiles.Multiline = True
         Me.lstSelectedFiles.Name = "lstSelectedFiles"
+        Me.lstSelectedFiles.ReadOnly = True
+        Me.lstSelectedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.lstSelectedFiles.Size = New System.Drawing.Size(1239, 84)
         Me.lstSelectedFiles.TabIndex = 2
         '
@@ -210,7 +211,7 @@ Partial Class Form1
 
     Friend WithEvents btnLoadTiff As Button
     Friend WithEvents lblFiles As Label
-    Friend WithEvents lstSelectedFiles As ListBox
+    Friend WithEvents lstSelectedFiles As TextBox
     Friend WithEvents btnOcrPages As Button
     Friend WithEvents btnRemoveSelectedFile As Button
     Friend WithEvents btnConvertToMonotonic As Button
