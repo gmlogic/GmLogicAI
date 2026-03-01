@@ -308,17 +308,17 @@ Public Class Form1
     End Function
 
     Private Function ExtractParagraphTitles(cleanText As String) As List(Of String)
-        Dim lines = cleanText.Split({Environment.NewLine}, StringSplitOptions.None)
+        Dim lines = Regex.Split(cleanText, "\r?\n")
         Dim titles As New List(Of String)()
 
         For i = 0 To lines.Length - 1
             Dim line = lines(i).Trim()
-            If line.Length = 0 Then
+            If IsSeparatorLine(line) Then
                 Continue For
             End If
 
-            Dim prevEmpty = (i = 0) OrElse String.IsNullOrWhiteSpace(lines(i - 1))
-            Dim nextEmpty = (i = lines.Length - 1) OrElse String.IsNullOrWhiteSpace(lines(i + 1))
+            Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(lines(i - 1))
+            Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(lines(i + 1))
 
             If Not (prevEmpty AndAlso nextEmpty) Then
                 Continue For
@@ -329,13 +329,32 @@ Public Class Form1
                 Continue For
             End If
 
+            If stripped.Length > 120 Then
+                Continue For
+            End If
+
             Dim first = stripped(0)
-            If Char.IsUpper(first) Then
+            If Char.IsUpper(first) AndAlso ContainsGreekLetter(stripped) Then
                 titles.Add(stripped)
             End If
         Next
 
         Return titles.Distinct().ToList()
+    End Function
+
+    Private Function IsSeparatorLine(line As String) As Boolean
+        If String.IsNullOrWhiteSpace(line) Then
+            Return True
+        End If
+
+        Dim compact = line.Trim()
+
+        ' Consider punctuation/digits-only OCR artifacts as separators.
+        Return Regex.IsMatch(compact, "^[\p{P}\p{S}\p{N}\s]+$")
+    End Function
+
+    Private Function ContainsGreekLetter(text As String) As Boolean
+        Return Regex.IsMatch(text, "[\p{IsGreek}\p{IsGreekExtended}]")
     End Function
 
 End Class
