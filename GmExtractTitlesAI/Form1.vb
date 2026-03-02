@@ -455,12 +455,17 @@ Public Class Form1
     End Function
 
     Private Function FormatExtractedTitlesOutput(titles As IEnumerable(Of String)) As String
-        Dim normalized = titles.Where(Function(t) Not String.IsNullOrWhiteSpace(t)).ToList()
+        Dim normalized = titles.
+            Where(Function(t) Not String.IsNullOrWhiteSpace(t)).
+            Select(Function(t) t.Trim()).
+            ToList()
+
         If normalized.Count = 0 Then
             Return String.Empty
         End If
 
-        Return String.Join(Environment.NewLine & Environment.NewLine, normalized)
+        Dim blocks = normalized.Select(Function(t) Environment.NewLine & t & Environment.NewLine)
+        Return NormalizeToCrLf(String.Concat(blocks))
     End Function
 
     Private Function CleanLineForHeadingCandidate(line As String) As String
@@ -468,7 +473,8 @@ Public Class Form1
             Return String.Empty
         End If
 
-        Dim cleaned = Regex.Replace(line, "[^\p{L}\p{N}\p{P}\p{Z}]", " ")
+        Dim noLineBreaks = line.Replace(vbCr, " ").Replace(vbLf, " ")
+        Dim cleaned = Regex.Replace(noLineBreaks, "[^\p{L}\p{N}\p{P}\p{Z}]", " ")
         cleaned = Regex.Replace(cleaned, "[ \t]+", " ")
         Return cleaned.Trim()
     End Function
