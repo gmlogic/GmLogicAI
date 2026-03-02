@@ -436,7 +436,7 @@ Public Class Form1
             Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(prevLine)
             Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(nextLine)
 
-            If Not (prevEmpty AndAlso nextEmpty) Then
+            If Not IsHeadingBoundaryCandidate(cleanedLine, prevEmpty, nextEmpty) Then
                 Continue For
             End If
 
@@ -452,6 +452,22 @@ Public Class Form1
         Next
 
         Return titles.Distinct().ToList()
+    End Function
+
+    Private Function IsHeadingBoundaryCandidate(line As String, prevEmpty As Boolean, nextEmpty As Boolean) As Boolean
+        If prevEmpty AndAlso nextEmpty Then
+            Return True
+        End If
+
+        ' OCR often merges heading/body without a trailing blank line.
+        If prevEmpty Then
+            Dim words = Regex.Split(line, "\s+").Where(Function(w) w.Length > 0).ToList()
+            If words.Count > 0 AndAlso words.Count <= 8 AndAlso line.Length <= 70 Then
+                Return True
+            End If
+        End If
+
+        Return False
     End Function
 
     Private Function FormatExtractedTitlesOutput(titles As IEnumerable(Of String)) As String
@@ -565,7 +581,8 @@ Public Class Form1
             Return False
         End If
 
-        If Not Regex.IsMatch(text, "[\p{Ll}]") Then
+        Dim letterCount = Regex.Matches(text, "[\p{L}]").Count
+        If letterCount < 2 Then
             Return False
         End If
 
