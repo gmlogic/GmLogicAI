@@ -10,16 +10,10 @@ Public Class Form1
     Private ReadOnly imageFiles As New List(Of String)()
     Private ReadOnly tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
     Private ReadOnly tesseractExePath As String = "C:\Program Files\Tesseract-OCR\tesseract.exe"
-    Private ocrProgressBar As ProgressBar
-    Private lblOcrProgress As Label
-    Private cmbPageSegMode As ComboBox
-    Private cmbEngineMode As ComboBox
-    Private chkPreserveSpaces As CheckBox
-    Private txtExtraOcrArgs As TextBox
-
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        InitializeOcrSettingsUi()
-        InitializeOcrProgressUi()
+        cmbOcrPsm.SelectedIndex = 2
+        cmbOcrOem.SelectedIndex = 0
+        UpdateOcrProgress(0, 0)
     End Sub
 
     Private Sub btnLoadTiff_Click(sender As Object, e As EventArgs) Handles btnLoadTiff.Click
@@ -137,7 +131,7 @@ Public Class Form1
         End If
 
         Dim titles = ExtractParagraphTitles(source)
-        txtExtractedTitles.Text = String.Join(Environment.NewLine, titles)
+        txtExtractedTitles.Text = FormatExtractedTitlesOutput(titles)
     End Sub
 
     Private Function GetDefaultImageFiles() As IEnumerable(Of String)
@@ -203,8 +197,8 @@ Public Class Form1
     End Function
 
     Private Function BuildTesseractArguments(filePath As String, tempOutputBase As String) As String
-        Dim psmValue = GetSelectedComboValue(cmbPageSegMode, fallbackValue:="6")
-        Dim oemValue = GetSelectedComboValue(cmbEngineMode, fallbackValue:="1")
+        Dim psmValue = GetSelectedComboValue(cmbOcrPsm, fallbackValue:="6")
+        Dim oemValue = GetSelectedComboValue(cmbOcrOem, fallbackValue:="1")
 
         Dim args As New List(Of String) From {
             $"""{filePath}""",
@@ -216,12 +210,12 @@ Public Class Form1
             "--dpi 300"
         }
 
-        If chkPreserveSpaces IsNot Nothing AndAlso chkPreserveSpaces.Checked Then
+        If chkOcrPreserveSpaces IsNot Nothing AndAlso chkOcrPreserveSpaces.Checked Then
             args.Add("-c preserve_interword_spaces=1")
         End If
 
-        If txtExtraOcrArgs IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(txtExtraOcrArgs.Text) Then
-            args.Add(txtExtraOcrArgs.Text.Trim())
+        If txtOcrExtraArgs IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(txtOcrExtraArgs.Text) Then
+            args.Add(txtOcrExtraArgs.Text.Trim())
         End If
 
         Return String.Join(" ", args)
@@ -241,99 +235,16 @@ Public Class Form1
         Return parts(0).Trim()
     End Function
 
-    Private Sub InitializeOcrSettingsUi()
-        SplitContainer2.SplitterDistance = 62
-        Dim settingsY = 31
 
-        Dim lblPsm As New Label() With {
-            .AutoSize = True,
-            .Location = New Point(2, settingsY + 4),
-            .Text = "PSM"
-        }
-        SplitContainer2.Panel1.Controls.Add(lblPsm)
-
-        cmbPageSegMode = New ComboBox() With {
-            .DropDownStyle = ComboBoxStyle.DropDownList,
-            .Location = New Point(38, settingsY),
-            .Width = 145
-        }
-        cmbPageSegMode.Items.AddRange(New Object() {
-            "3 - Fully automatic",
-            "4 - Single column",
-            "6 - Single text block",
-            "11 - Sparse text"
-        })
-        cmbPageSegMode.SelectedItem = "6 - Single text block"
-        SplitContainer2.Panel1.Controls.Add(cmbPageSegMode)
-
-        Dim lblOem As New Label() With {
-            .AutoSize = True,
-            .Location = New Point(193, settingsY + 4),
-            .Text = "OEM"
-        }
-        SplitContainer2.Panel1.Controls.Add(lblOem)
-
-        cmbEngineMode = New ComboBox() With {
-            .DropDownStyle = ComboBoxStyle.DropDownList,
-            .Location = New Point(229, settingsY),
-            .Width = 125
-        }
-        cmbEngineMode.Items.AddRange(New Object() {
-            "1 - LSTM engine",
-            "3 - Default"
-        })
-        cmbEngineMode.SelectedItem = "1 - LSTM engine"
-        SplitContainer2.Panel1.Controls.Add(cmbEngineMode)
-
-        chkPreserveSpaces = New CheckBox() With {
-            .AutoSize = True,
-            .Location = New Point(364, settingsY + 3),
-            .Text = "Preserve spaces"
-        }
-        SplitContainer2.Panel1.Controls.Add(chkPreserveSpaces)
-
-        Dim lblExtraArgs As New Label() With {
-            .AutoSize = True,
-            .Location = New Point(488, settingsY + 4),
-            .Text = "Extra args"
-        }
-        SplitContainer2.Panel1.Controls.Add(lblExtraArgs)
-
-        txtExtraOcrArgs = New TextBox() With {
-            .Location = New Point(551, settingsY),
-            .Width = 390
-        }
-        SplitContainer2.Panel1.Controls.Add(txtExtraOcrArgs)
-    End Sub
-
-    Private Sub InitializeOcrProgressUi()
-        ocrProgressBar = New ProgressBar() With {
-            .Location = New Point(490, 6),
-            .Size = New Size(190, 17),
-            .Style = ProgressBarStyle.Continuous,
-            .Minimum = 0,
-            .Maximum = 100,
-            .Value = 0
-        }
-
-        lblOcrProgress = New Label() With {
-            .AutoSize = True,
-            .Location = New Point(688, 9),
-            .Text = "0/0"
-        }
-
-        SplitContainer2.Panel1.Controls.Add(ocrProgressBar)
-        SplitContainer2.Panel1.Controls.Add(lblOcrProgress)
-    End Sub
 
     Private Sub UpdateOcrProgress(currentIndex As Integer, totalPages As Integer)
-        If ocrProgressBar Is Nothing OrElse lblOcrProgress Is Nothing Then
+        If prgOcrPages Is Nothing OrElse lblOcrProgress Is Nothing Then
             Return
         End If
 
         Dim safeTotal = Math.Max(totalPages, 1)
         Dim percentage = CInt(Math.Truncate((currentIndex * 100.0R) / safeTotal))
-        ocrProgressBar.Value = Math.Max(0, Math.Min(100, percentage))
+        prgOcrPages.Value = Math.Max(0, Math.Min(100, percentage))
         lblOcrProgress.Text = $"{currentIndex}/{totalPages}"
     End Sub
 
@@ -502,42 +413,79 @@ Public Class Form1
         Dim allowedPattern = "[^\p{L}\p{N}\p{P}\p{Z}\r\n]"
         Dim cleaned = Regex.Replace(input, allowedPattern, " ")
 
+        cleaned = NormalizeToCrLf(cleaned)
         cleaned = Regex.Replace(cleaned, "[ \t]+", " ")
-        cleaned = Regex.Replace(cleaned, "\n{3,}", Environment.NewLine & Environment.NewLine)
+        cleaned = Regex.Replace(cleaned, "(?:\r\n){3,}", Environment.NewLine & Environment.NewLine)
 
         Return cleaned.Trim()
     End Function
 
     Private Function ExtractParagraphTitles(cleanText As String) As List(Of String)
-        Dim lines = Regex.Split(cleanText, "\r?\n")
+        Dim lines = Regex.Split(NormalizeToCrLf(cleanText), "\r\n")
         Dim titles As New List(Of String)()
 
         For i = 0 To lines.Length - 1
-            Dim line = lines(i).Trim()
-            If IsSeparatorLine(line) Then
+            Dim cleanedLine = CleanLineForHeadingCandidate(lines(i))
+            If IsSeparatorLine(cleanedLine) Then
                 Continue For
             End If
 
-            Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(lines(i - 1))
-            Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(lines(i + 1))
+            Dim prevLine = If(i = 0, String.Empty, CleanLineForHeadingCandidate(lines(i - 1)))
+            Dim nextLine = If(i = lines.Length - 1, String.Empty, CleanLineForHeadingCandidate(lines(i + 1)))
+
+            Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(prevLine)
+            Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(nextLine)
 
             If Not (prevEmpty AndAlso nextEmpty) Then
                 Continue For
             End If
 
-            Dim stripped = Regex.Replace(line, "^[^\p{Lu}]*", String.Empty)
-            If stripped.Length = 0 Then
+            If Not StartsWithUppercaseLetter(cleanedLine) Then
                 Continue For
             End If
 
-            If Not IsLikelyHeadingText(stripped) Then
+            If Not IsLikelyHeadingText(cleanedLine) Then
                 Continue For
             End If
 
-            titles.Add(stripped)
+            titles.Add($"<head> {cleanedLine}")
         Next
 
         Return titles.Distinct().ToList()
+    End Function
+
+    Private Function FormatExtractedTitlesOutput(titles As IEnumerable(Of String)) As String
+        Dim normalized = titles.Where(Function(t) Not String.IsNullOrWhiteSpace(t)).ToList()
+        If normalized.Count = 0 Then
+            Return String.Empty
+        End If
+
+        Return String.Join(Environment.NewLine & Environment.NewLine, normalized)
+    End Function
+
+    Private Function CleanLineForHeadingCandidate(line As String) As String
+        If String.IsNullOrWhiteSpace(line) Then
+            Return String.Empty
+        End If
+
+        Dim cleaned = Regex.Replace(line, "[^\p{L}\p{N}\p{P}\p{Z}]", " ")
+        cleaned = Regex.Replace(cleaned, "[ \t]+", " ")
+        Return cleaned.Trim()
+    End Function
+
+    Private Function NormalizeToCrLf(input As String) As String
+        Dim normalized = input.Replace(vbCrLf, vbLf).Replace(vbCr, vbLf)
+        Return normalized.Replace(vbLf, vbCrLf)
+    End Function
+
+    Private Function StartsWithUppercaseLetter(line As String) As Boolean
+        For Each ch In line
+            If Char.IsLetter(ch) Then
+                Return Char.IsUpper(ch)
+            End If
+        Next
+
+        Return False
     End Function
 
     Private Function IsSeparatorLine(line As String) As Boolean

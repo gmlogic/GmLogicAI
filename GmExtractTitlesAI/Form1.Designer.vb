@@ -22,6 +22,15 @@ Partial Class Form1
         Me.lstSelectedFiles = New System.Windows.Forms.TextBox()
         Me.btnOcrPages = New System.Windows.Forms.Button()
         Me.btnRemoveSelectedFile = New System.Windows.Forms.Button()
+        Me.lblOcrPsm = New System.Windows.Forms.Label()
+        Me.cmbOcrPsm = New System.Windows.Forms.ComboBox()
+        Me.lblOcrOem = New System.Windows.Forms.Label()
+        Me.cmbOcrOem = New System.Windows.Forms.ComboBox()
+        Me.chkOcrPreserveSpaces = New System.Windows.Forms.CheckBox()
+        Me.lblOcrExtraArgs = New System.Windows.Forms.Label()
+        Me.txtOcrExtraArgs = New System.Windows.Forms.TextBox()
+        Me.prgOcrPages = New System.Windows.Forms.ProgressBar()
+        Me.lblOcrProgress = New System.Windows.Forms.Label()
         Me.btnConvertToMonotonic = New System.Windows.Forms.Button()
         Me.btnExtractTitles = New System.Windows.Forms.Button()
         Me.lblRawText = New System.Windows.Forms.Label()
@@ -94,6 +103,87 @@ Partial Class Form1
         Me.btnRemoveSelectedFile.TabIndex = 7
         Me.btnRemoveSelectedFile.Text = "Remove selected file"
         Me.btnRemoveSelectedFile.UseVisualStyleBackColor = True
+
+        '
+        'lblOcrPsm
+        '
+        Me.lblOcrPsm.AutoSize = True
+        Me.lblOcrPsm.Location = New System.Drawing.Point(2, 35)
+        Me.lblOcrPsm.Name = "lblOcrPsm"
+        Me.lblOcrPsm.Size = New System.Drawing.Size(31, 13)
+        Me.lblOcrPsm.TabIndex = 8
+        Me.lblOcrPsm.Text = "PSM"
+        '
+        'cmbOcrPsm
+        '
+        Me.cmbOcrPsm.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbOcrPsm.FormattingEnabled = True
+        Me.cmbOcrPsm.Items.AddRange(New Object() {"3 - Fully automatic", "4 - Single column", "6 - Single text block", "11 - Sparse text"})
+        Me.cmbOcrPsm.Location = New System.Drawing.Point(38, 31)
+        Me.cmbOcrPsm.Name = "cmbOcrPsm"
+        Me.cmbOcrPsm.Size = New System.Drawing.Size(145, 21)
+        Me.cmbOcrPsm.TabIndex = 9
+        '
+        'lblOcrOem
+        '
+        Me.lblOcrOem.AutoSize = True
+        Me.lblOcrOem.Location = New System.Drawing.Point(193, 35)
+        Me.lblOcrOem.Name = "lblOcrOem"
+        Me.lblOcrOem.Size = New System.Drawing.Size(33, 13)
+        Me.lblOcrOem.TabIndex = 10
+        Me.lblOcrOem.Text = "OEM"
+        '
+        'cmbOcrOem
+        '
+        Me.cmbOcrOem.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbOcrOem.FormattingEnabled = True
+        Me.cmbOcrOem.Items.AddRange(New Object() {"1 - LSTM engine", "3 - Default"})
+        Me.cmbOcrOem.Location = New System.Drawing.Point(229, 31)
+        Me.cmbOcrOem.Name = "cmbOcrOem"
+        Me.cmbOcrOem.Size = New System.Drawing.Size(125, 21)
+        Me.cmbOcrOem.TabIndex = 11
+        '
+        'chkOcrPreserveSpaces
+        '
+        Me.chkOcrPreserveSpaces.AutoSize = True
+        Me.chkOcrPreserveSpaces.Location = New System.Drawing.Point(364, 34)
+        Me.chkOcrPreserveSpaces.Name = "chkOcrPreserveSpaces"
+        Me.chkOcrPreserveSpaces.Size = New System.Drawing.Size(104, 17)
+        Me.chkOcrPreserveSpaces.TabIndex = 12
+        Me.chkOcrPreserveSpaces.Text = "Preserve spaces"
+        Me.chkOcrPreserveSpaces.UseVisualStyleBackColor = True
+        '
+        'lblOcrExtraArgs
+        '
+        Me.lblOcrExtraArgs.AutoSize = True
+        Me.lblOcrExtraArgs.Location = New System.Drawing.Point(488, 35)
+        Me.lblOcrExtraArgs.Name = "lblOcrExtraArgs"
+        Me.lblOcrExtraArgs.Size = New System.Drawing.Size(53, 13)
+        Me.lblOcrExtraArgs.TabIndex = 13
+        Me.lblOcrExtraArgs.Text = "Extra args"
+        '
+        'txtOcrExtraArgs
+        '
+        Me.txtOcrExtraArgs.Location = New System.Drawing.Point(551, 31)
+        Me.txtOcrExtraArgs.Name = "txtOcrExtraArgs"
+        Me.txtOcrExtraArgs.Size = New System.Drawing.Size(390, 20)
+        Me.txtOcrExtraArgs.TabIndex = 14
+        '
+        'prgOcrPages
+        '
+        Me.prgOcrPages.Location = New System.Drawing.Point(491, 6)
+        Me.prgOcrPages.Name = "prgOcrPages"
+        Me.prgOcrPages.Size = New System.Drawing.Size(190, 17)
+        Me.prgOcrPages.TabIndex = 15
+        '
+        'lblOcrProgress
+        '
+        Me.lblOcrProgress.AutoSize = True
+        Me.lblOcrProgress.Location = New System.Drawing.Point(688, 9)
+        Me.lblOcrProgress.Name = "lblOcrProgress"
+        Me.lblOcrProgress.Size = New System.Drawing.Size(24, 13)
+        Me.lblOcrProgress.TabIndex = 16
+        Me.lblOcrProgress.Text = "0/0"
         '
         'btnConvertToMonotonic
         '
@@ -211,6 +301,15 @@ Partial Class Form1
         '
         'SplitContainer2.Panel1
         '
+        Me.SplitContainer2.Panel1.Controls.Add(Me.lblOcrProgress)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.prgOcrPages)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.txtOcrExtraArgs)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.lblOcrExtraArgs)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.chkOcrPreserveSpaces)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.cmbOcrOem)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.lblOcrOem)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.cmbOcrPsm)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.lblOcrPsm)
         Me.SplitContainer2.Panel1.Controls.Add(Me.btnLoadTiff)
         Me.SplitContainer2.Panel1.Controls.Add(Me.lblFiles)
         Me.SplitContainer2.Panel1.Controls.Add(Me.btnRemoveSelectedFile)
@@ -219,7 +318,7 @@ Partial Class Form1
         '
         Me.SplitContainer2.Panel2.Controls.Add(Me.lstSelectedFiles)
         Me.SplitContainer2.Size = New System.Drawing.Size(947, 188)
-        Me.SplitContainer2.SplitterDistance = 31
+        Me.SplitContainer2.SplitterDistance = 62
         Me.SplitContainer2.TabIndex = 8
         '
         'TableLayoutPanel1
@@ -290,4 +389,13 @@ Partial Class Form1
     Friend WithEvents SplitContainer1 As SplitContainer
     Friend WithEvents SplitContainer2 As SplitContainer
     Friend WithEvents TableLayoutPanel1 As TableLayoutPanel
+    Friend WithEvents lblOcrPsm As Label
+    Friend WithEvents cmbOcrPsm As ComboBox
+    Friend WithEvents lblOcrOem As Label
+    Friend WithEvents cmbOcrOem As ComboBox
+    Friend WithEvents chkOcrPreserveSpaces As CheckBox
+    Friend WithEvents lblOcrExtraArgs As Label
+    Friend WithEvents txtOcrExtraArgs As TextBox
+    Friend WithEvents prgOcrPages As ProgressBar
+    Friend WithEvents lblOcrProgress As Label
 End Class
