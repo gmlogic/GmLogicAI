@@ -10,6 +10,11 @@ Public Class Form1
     Private ReadOnly imageFiles As New List(Of String)()
     Private ReadOnly tessPath As String = "C:\Program Files\Tesseract-OCR\tessdata"
     Private ReadOnly tesseractExePath As String = "C:\Program Files\Tesseract-OCR\tesseract.exe"
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        cmbOcrPsm.SelectedIndex = 2
+        cmbOcrOem.SelectedIndex = 0
+        UpdateOcrProgress(0, 0)
+    End Sub
 
     Private Sub btnLoadTiff_Click(sender As Object, e As EventArgs) Handles btnLoadTiff.Click
         Dim selected As New List(Of String)()
@@ -85,20 +90,29 @@ Public Class Form1
 
         Dim pagesText As New StringBuilder()
 
-        For i = 0 To imageFiles.Count - 1
-            Dim filePath = imageFiles(i)
-            Dim ocr = RunTesseractOcr(filePath)
+        ToggleOcrActionState(isRunning:=True)
 
-            If String.IsNullOrWhiteSpace(ocr) Then
-                ocr = $"[No OCR output for page {i + 1}]"
-            End If
+        Try
+            For i = 0 To imageFiles.Count - 1
+                Dim filePath = imageFiles(i)
+                Dim ocr = RunTesseractOcr(filePath)
 
-            pagesText.AppendLine($"===== PAGE {i + 1}: {Path.GetFileName(filePath)} =====")
-            pagesText.AppendLine(ocr.Trim())
-            pagesText.AppendLine()
-        Next
+                If String.IsNullOrWhiteSpace(ocr) Then
+                    ocr = $"[No OCR output for page {i + 1}]"
+                End If
 
-        txtRawPolytonic.Text = pagesText.ToString().Trim()
+                pagesText.AppendLine($"===== PAGE {i + 1}: {Path.GetFileName(filePath)} =====")
+                pagesText.AppendLine(ocr.Trim())
+                pagesText.AppendLine()
+
+                UpdateOcrProgress(currentIndex:=i + 1, totalPages:=imageFiles.Count)
+                Application.DoEvents()
+            Next
+
+            txtRawPolytonic.Text = pagesText.ToString().Trim()
+        Finally
+            ToggleOcrActionState(isRunning:=False)
+        End Try
     End Sub
 
     Private Sub btnConvertToMonotonic_Click(sender As Object, e As EventArgs) Handles btnConvertToMonotonic.Click
@@ -117,7 +131,7 @@ Public Class Form1
         End If
 
         Dim titles = ExtractParagraphTitles(source)
-        txtExtractedTitles.Text = String.Join(Environment.NewLine, titles)
+        txtExtractedTitles.Text = FormatExtractedTitlesOutput(titles)
     End Sub
 
     Private Function GetDefaultImageFiles() As IEnumerable(Of String)
@@ -145,7 +159,7 @@ Public Class Form1
         Try
             Dim psi As New ProcessStartInfo()
             psi.FileName = GetTesseractCommand()
-            psi.Arguments = $"""{filePath}"" ""{tempOutputBase}"" -l ell --tessdata-dir ""{tessPath}"""
+            psi.Arguments = BuildTesseractArguments(filePath, tempOutputBase)
             psi.CreateNoWindow = True
             psi.UseShellExecute = False
             psi.RedirectStandardError = True
@@ -181,6 +195,70 @@ Public Class Form1
             End If
         End Try
     End Function
+
+    Private Function BuildTesseractArguments(filePath As String, tempOutputBase As String) As String
+        Dim psmValue = GetSelectedComboValue(cmbOcrPsm, fallbackValue:="6")
+        Dim oemValue = GetSelectedComboValue(cmbOcrOem, fallbackValue:="1")
+
+        Dim args As New List(Of String) From {
+            $"""{filePath}""",
+            $"""{tempOutputBase}""",
+            "-l ell",
+            $"--tessdata-dir ""{tessPath}""",
+            $"--psm {psmValue}",
+            $"--oem {oemValue}",
+            "--dpi 300"
+        }
+
+        If chkOcrPreserveSpaces IsNot Nothing AndAlso chkOcrPreserveSpaces.Checked Then
+            args.Add("-c preserve_interword_spaces=1")
+        End If
+
+        If txtOcrExtraArgs IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(txtOcrExtraArgs.Text) Then
+            args.Add(txtOcrExtraArgs.Text.Trim())
+        End If
+
+        Return String.Join(" ", args)
+    End Function
+
+    Private Function GetSelectedComboValue(combo As ComboBox, fallbackValue As String) As String
+        If combo Is Nothing OrElse combo.SelectedItem Is Nothing Then
+            Return fallbackValue
+        End If
+
+        Dim selected = combo.SelectedItem.ToString()
+        If String.IsNullOrWhiteSpace(selected) Then
+            Return fallbackValue
+        End If
+
+        Dim parts = selected.Split("-"c)
+        Return parts(0).Trim()
+    End Function
+
+
+
+    Private Sub UpdateOcrProgress(currentIndex As Integer, totalPages As Integer)
+        If prgOcrPages Is Nothing OrElse lblOcrProgress Is Nothing Then
+            Return
+        End If
+
+        Dim safeTotal = Math.Max(totalPages, 1)
+        Dim percentage = CInt(Math.Truncate((currentIndex * 100.0R) / safeTotal))
+        prgOcrPages.Value = Math.Max(0, Math.Min(100, percentage))
+        lblOcrProgress.Text = $"{currentIndex}/{totalPages}"
+    End Sub
+
+    Private Sub ToggleOcrActionState(isRunning As Boolean)
+        btnOcrPages.Enabled = Not isRunning
+        btnLoadTiff.Enabled = Not isRunning
+        btnRemoveSelectedFile.Enabled = Not isRunning
+
+        If isRunning Then
+            UpdateOcrProgress(0, imageFiles.Count)
+        ElseIf imageFiles.Count = 0 Then
+            UpdateOcrProgress(0, 0)
+        End If
+    End Sub
 
 
     Private Function GetTesseractCommand() As String
@@ -335,42 +413,101 @@ Public Class Form1
         Dim allowedPattern = "[^\p{L}\p{N}\p{P}\p{Z}\r\n]"
         Dim cleaned = Regex.Replace(input, allowedPattern, " ")
 
+        cleaned = NormalizeToCrLf(cleaned)
         cleaned = Regex.Replace(cleaned, "[ \t]+", " ")
-        cleaned = Regex.Replace(cleaned, "\n{3,}", Environment.NewLine & Environment.NewLine)
+        cleaned = Regex.Replace(cleaned, "(?:\r\n){3,}", Environment.NewLine & Environment.NewLine)
 
         Return cleaned.Trim()
     End Function
 
     Private Function ExtractParagraphTitles(cleanText As String) As List(Of String)
-        Dim lines = Regex.Split(cleanText, "\r?\n")
+        Dim lines = Regex.Split(NormalizeToCrLf(cleanText), "\r\n")
         Dim titles As New List(Of String)()
 
         For i = 0 To lines.Length - 1
-            Dim line = lines(i).Trim()
-            If IsSeparatorLine(line) Then
+            Dim cleanedLine = CleanLineForHeadingCandidate(lines(i))
+            If IsSeparatorLine(cleanedLine) Then
                 Continue For
             End If
 
-            Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(lines(i - 1))
-            Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(lines(i + 1))
+            Dim prevLine = If(i = 0, String.Empty, CleanLineForHeadingCandidate(lines(i - 1)))
+            Dim nextLine = If(i = lines.Length - 1, String.Empty, CleanLineForHeadingCandidate(lines(i + 1)))
 
-            If Not (prevEmpty AndAlso nextEmpty) Then
+            Dim prevEmpty = (i = 0) OrElse IsSeparatorLine(prevLine)
+            Dim nextEmpty = (i = lines.Length - 1) OrElse IsSeparatorLine(nextLine)
+
+            If Not IsHeadingBoundaryCandidate(cleanedLine, prevEmpty, nextEmpty) Then
                 Continue For
             End If
 
-            Dim stripped = Regex.Replace(line, "^[^\p{Lu}]*", String.Empty)
-            If stripped.Length = 0 Then
+            If Not StartsWithUppercaseLetter(cleanedLine) Then
                 Continue For
             End If
 
-            If Not IsLikelyHeadingText(stripped) Then
+            If Not IsLikelyHeadingText(cleanedLine) Then
                 Continue For
             End If
 
-            titles.Add(stripped)
+            titles.Add($"<head> {cleanedLine}")
         Next
 
         Return titles.Distinct().ToList()
+    End Function
+
+    Private Function IsHeadingBoundaryCandidate(line As String, prevEmpty As Boolean, nextEmpty As Boolean) As Boolean
+        If prevEmpty AndAlso nextEmpty Then
+            Return True
+        End If
+
+        ' OCR often merges heading/body without a trailing blank line.
+        If prevEmpty Then
+            Dim words = Regex.Split(line, "\s+").Where(Function(w) w.Length > 0).ToList()
+            If words.Count > 0 AndAlso words.Count <= 8 AndAlso line.Length <= 70 Then
+                Return True
+            End If
+        End If
+
+        Return False
+    End Function
+
+    Private Function FormatExtractedTitlesOutput(titles As IEnumerable(Of String)) As String
+        Dim normalized = titles.
+            Where(Function(t) Not String.IsNullOrWhiteSpace(t)).
+            Select(Function(t) t.Trim()).
+            ToList()
+
+        If normalized.Count = 0 Then
+            Return String.Empty
+        End If
+
+        Dim blocks = normalized.Select(Function(t) Environment.NewLine & t & Environment.NewLine)
+        Return NormalizeToCrLf(String.Concat(blocks))
+    End Function
+
+    Private Function CleanLineForHeadingCandidate(line As String) As String
+        If String.IsNullOrWhiteSpace(line) Then
+            Return String.Empty
+        End If
+
+        Dim noLineBreaks = line.Replace(vbCr, " ").Replace(vbLf, " ")
+        Dim cleaned = Regex.Replace(noLineBreaks, "[^\p{L}\p{N}\p{P}\p{Z}]", " ")
+        cleaned = Regex.Replace(cleaned, "[ \t]+", " ")
+        Return cleaned.Trim()
+    End Function
+
+    Private Function NormalizeToCrLf(input As String) As String
+        Dim normalized = input.Replace(vbCrLf, vbLf).Replace(vbCr, vbLf)
+        Return normalized.Replace(vbLf, vbCrLf)
+    End Function
+
+    Private Function StartsWithUppercaseLetter(line As String) As Boolean
+        For Each ch In line
+            If Char.IsLetter(ch) Then
+                Return Char.IsUpper(ch)
+            End If
+        Next
+
+        Return False
     End Function
 
     Private Function IsSeparatorLine(line As String) As Boolean
@@ -444,7 +581,8 @@ Public Class Form1
             Return False
         End If
 
-        If Not Regex.IsMatch(text, "[\p{Ll}]") Then
+        Dim letterCount = Regex.Matches(text, "[\p{L}]").Count
+        If letterCount < 2 Then
             Return False
         End If
 
